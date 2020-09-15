@@ -1,0 +1,17 @@
+certifi==2020.6.20
+cycler==0.10.0
+decorator==4.4.2
+kiwisolver==1.2.0
+matplotlib==3.3.2
+networkx==2.5
+numpy==1.19.2
+pandas==1.1.2
+Pillow==7.2.0
+pyparsing==2.4.7
+python-dateutil==2.8.1
+python-igraph==0.8.2
+pytz==2020.1
+scipy==1.5.2
+seaborn==0.11.0
+six==1.15.0
+texttable==1.6.3

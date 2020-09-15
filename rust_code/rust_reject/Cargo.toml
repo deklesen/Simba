@@ -1,0 +1,12 @@
+
+[package]
+name = "rust_reject"
+version = "0.1.0"
+authors = ["Gerrit Grossmann <gerrit.grossmann@uni-saarland.de>"]
+
+[dependencies]
+progress = "0.2"
+rand = "0.4"
+log="*"
+simple_logger="*"
+stopwatch = "0.0.7"
