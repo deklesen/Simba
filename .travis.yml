@@ -4,9 +4,10 @@ python:
   - "3.6"
 install:
   - pip install -r requirements.txt
-  - sudo sudo apt install snapd
-  - sudo snap install rustup --classic
-  - sudo rustup update
+  #- sudo sudo apt install snapd
+  #- sudo snap install rustup --classic
+  #- sudo rustup update
+  - sudo curl https://sh.rustup.rs -sSf | sh -s  --  -q
   - sudo source $HOME/.cargo/env
   - cd rust_reject && cargo build --release
   - cd ..
