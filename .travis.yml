@@ -10,6 +10,6 @@ install:
   - sudo curl https://sh.rustup.rs -sSf | sh -s -- -y
   - source $HOME/.cargo/env
   - cd rust_code/rust_reject && cargo build --release
-  - cd ..
+  - cd ../..
 script:
   - python evaluation.py
