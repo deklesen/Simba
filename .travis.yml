@@ -9,7 +9,7 @@ install:
   #- sudo rustup update
   - sudo curl https://sh.rustup.rs -sSf | sh -s -- -y
   - source $HOME/.cargo/env
-  - cd rust_reject && cargo build --release
+  - cd rust_code/rust_reject && cargo build --release
   - cd ..
 script:
   - python evaluation.py
