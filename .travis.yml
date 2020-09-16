@@ -4,7 +4,10 @@ python:
   - "3.6"
 install:
   - pip install -r requirements.txt
-  - sudo curl --proto '=https' --tlsv1.2 -sSf -y https://sh.rustup.rs | sh
+  - sudo sudo apt install snapd
+  - sudo snap install rustup --classic
+  - sudo rustup update
+  - sudo source $HOME/.cargo/env
   - cd rust_reject && cargo build --release
   - cd ..
 script:
