@@ -60,14 +60,14 @@ There should be at least one node for each possible label.
 Each rust-call produces extensive outputs in `output/<expname>` containing the input graphs, the transmission graphs, and its solution.
 In particular, in each iteration, Simba outputs the corresponding input graph where initially infected nodes are red and vaccinated nodes are orange.
 
-![ExampleGraph](https://raw.githubusercontent.com/gerritgr/Simba/example_graph.png)
+![ExampleGraph](https://raw.githubusercontent.com/gerritgr/Simba/master/example_graph.png)
 
 
 ## Runtime 
 ------------------
 Constructing and solving a single transmission graph is slightly supra-linear. 
 
-![ExamplePerformance](https://raw.githubusercontent.com/gerritgr/Simba/example_performance.png)
+![ExamplePerformance](https://raw.githubusercontent.com/gerritgr/Simba/master/example_performance.png)
 
 
 
