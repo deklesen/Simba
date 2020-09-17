@@ -279,12 +279,12 @@ def call_rust(CG, init_infected, path, type, init_recovered = None, num_run=1000
 
     # plot graphs
     if CG.number_of_nodes() < PLOTLIM:
-        pass
-        #pos_cg = nx.kamada_kawai_layout(CG)
-        #pos_cg = [(pos_cg[i][0], pos_cg[i][1]) for i in range(CG.number_of_nodes())]
-        #pos_tg = pos_cg + [(0, 1.5 * np.max([p[1] for p in pos_cg]))]
-        #plot_contact_graph(CG, path.format(type='init_graph_'+type, fileformat='pdf'), init_infected, init_recovered=init_recovered, pos=pos_cg)
-        #plot_TG(TG, path.format(type='transm_graph_'+type, fileformat='pdf'), init_infected, eq_dist, number_of_times_infected, init_recovered=init_recovered, pos=pos_tg,  CG=CG, pos_cg=pos_cg)
+        #pass
+        pos_cg = nx.kamada_kawai_layout(CG)
+        pos_cg = [(pos_cg[i][0], pos_cg[i][1]) for i in range(CG.number_of_nodes())]
+        pos_tg = pos_cg + [(0, 1.5 * np.max([p[1] for p in pos_cg]))]
+        plot_contact_graph(CG, path.format(type='init_graph_'+type, fileformat='pdf'), init_infected, init_recovered=init_recovered, pos=pos_cg)
+        plot_TG(TG, path.format(type='transm_graph_'+type, fileformat='pdf'), init_infected, eq_dist, number_of_times_infected, init_recovered=init_recovered, pos=pos_tg,  CG=CG, pos_cg=pos_cg)
 
     print('output done in call rust')
     return CG, TG, traj_data, final_unaffected_mean, eq_dist
@@ -469,6 +469,7 @@ def analysis(CG, name, infection_rate=2.0, budget=1, max_steps=OPTIMSTEPS, init_
 
 # for testing (includes plotting each step)
 analysis(gg.geom_graph(40), 'SmallTestNetwork', infection_rate=2.0, budget=2, init_infected=[10,11])
+
 
 # Don't run experiments in test enviroment
 if 'TRAVIS' not in os.environ:
