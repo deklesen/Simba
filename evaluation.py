@@ -476,7 +476,7 @@ if 'TRAVIS' not in os.environ:
     # candidates (unfort. some non-det. somewhere (maybe in graph generatino))
     analysis(gg.geom_graph(100, 0.01), 'Exp1_Geom', infection_rate=1.0, budget=2, init_infected=[0,1,2,3,4])
     analysis(gg.erdos_renyi(1000,0.01), 'Exp2_Erdos', infection_rate=1.3, budget=3, init_infected=[0])
-    analysis(gg.barabasi(10000), 'Exp3_BA_'+str(i), infection_rate=0.6, budget=10, init_infected=[100, 101,102,103,104,105,106,107,108,109])
+    analysis(gg.barabasi(10000), 'Exp3_BA', infection_rate=0.6, budget=10, init_infected=[100, 101,102,103,104,105,106,107,108,109])
 
     # speed test, might take a while
     speed_test()
