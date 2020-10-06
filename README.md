@@ -3,7 +3,7 @@
 [![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](http://www.gnu.org/licenses/gpl-3.0)
 
 Version: 0.1 (Please note that this is proof-of-concept code in a very early development stage).
-For qestions and remarks pleaes contact  [Gerrit Großmann](https://mosi.uni-saarland.de/people/gerrit/).
+For questions and remarks please contact [Gerrit Großmann](https://mosi.uni-saarland.de/people/gerrit/).
 
 
 ## Overview
@@ -36,13 +36,13 @@ Run the experiments from the study with:
 python evaluation.py
 ```
 
-Alternativly, you can import and call `def analysis` from `evaluation.py`.
+Alternatively, you can import and call the `analysis` function from `evaluation.py`.
 
 
 #### Calling Rust
-You can also call the rust code diretly.
+You can also call the rust code directly.
 See the `def call_rust` for more information.
-Note that the network file contains containing a labeled graph specifying the initial state, each line having the form `<Nodeid>;<Label>;<Neighbor1>,<Neighbor2>,...`
+Note that the network file contains a labeled graph specifying the initial state, each line having the form `<Nodeid>;<Label>;<Neighbor1>,<Neighbor2>,...`
 ```sh
 0;I;31,29,94,13,83
 1;S;66,15,73
@@ -52,7 +52,7 @@ Note that the network file contains containing a labeled graph specifying the in
 ...
 ```
 Nodes start with id 0 and are sorted (rendering the first number somewhat redundant). 
-Isolates (nodes withouth neighbors) are not supported (yet). 
+Isolates (nodes without neighbors) are not supported (yet). 
 There should be at least one node for each possible label. 
 
 
