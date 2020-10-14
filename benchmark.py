@@ -6,7 +6,7 @@ from pathlib import Path
 import os, time
 import pandas as pd
 
-run_nr=0#random.randint(0,100000)
+run_nr=10#random.randint(0,100000)
 print("Run number:",run_nr)
 
 
@@ -85,13 +85,14 @@ def call_rust(CG, init_infected, path, init_recovered = None, num_run=1000, infe
 # Filter out None-graphs
 # Transform graphs to largest subgraph
 def filter_graphs(input):
-    to_largest_subgraph = lambda graph: max(nx.connected_components(graph), key=len)
+    to_largest_subgraph = lambda graph: graph.subgraph(max(nx.connected_components(graph), key=len))
     a = dict(filter(lambda x: x[1] is not None, input.items()))
-    return {name:to_largest_subgraph(g) for name, g in a.items()}
+    return { name: to_largest_subgraph(g) for name, g in a.items()}
 
 import numpy as np
 
 def get_graph_data(graph):
+    print(graph)
     degrees = np.array(list(map(lambda x: x[1], graph.degree())))
     return {
         'num_nodes': graph.number_of_nodes(),
@@ -112,8 +113,8 @@ baselines={
     'PersPageRank': baseline_PersPagerank
 }
 
-graphs=filter_NoneValues({
-    **{f'geom_graph_{node_num}' :geom_graph(node_num) for node_num in [150,300,500,1000,2000,2500]},
+graphs=filter_graphs({
+    **{f'geom_graph_{node_num}': geom_graph(node_num) for node_num in [150,300,500,1000,2000,2500]},
 
 })
 
@@ -143,6 +144,7 @@ if __name__=='__main__':
     with tqdm.tqdm(total=num_experiments) as pbar:
         for infection_rate in infection_rates:
             for graph_name, graph in graphs.items():
+                print(graph)
                 graph_data = {
                     **get_graph_data(graph),
                     'name': graph_name,
