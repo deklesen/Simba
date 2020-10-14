@@ -37,7 +37,6 @@ class DiseaseGraph():
     def infect(self, target_node):
         if isinstance(target_node,int):
             target_node = self.g.vs[target_node]
-
         assert target_node['state'] == States.S
         target_node['state'] = States.I
 

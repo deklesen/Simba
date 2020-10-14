@@ -28,6 +28,7 @@ def geom_graph(node_num=350, radius = 0.07):
         radius *= 1.1
         seed += 1
     print('failed graph generation geom_graph')
+    return None
 
 
 def fuzzy_geom_graph(size, radius, deg, ret_coords=True, force_connected=True):
@@ -51,6 +52,7 @@ def fuzzy_geom_graph(size, radius, deg, ret_coords=True, force_connected=True):
         if not force_connected or nx.is_connected(G):
             return G
     print('failed graph generation fuzzy_geom_graph')
+    return None
 
 
 def geom_powerlaw(num_nodes=100, gamma=2.2, min_truncate=2, max_truncate=None, radius=1.0):
@@ -268,6 +270,7 @@ def geometric_configuration_model(degree_sequence, coordinates=None, ignore_loca
                 if (i_step > max_steps / 20) and nx.is_connected(G):
                     return G
     print('Generation failed geometric_configuration_model')
+    return None
 
 
 def geometric_configuration_pl(num_nodes=100, gamma=2.2, min_truncate=2, max_truncate=None, mcmc=False):

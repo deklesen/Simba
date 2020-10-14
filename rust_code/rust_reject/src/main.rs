@@ -456,10 +456,10 @@ fn write_output(summary: Summary, step_count: usize, rejected_steps: usize, runt
     let mut counter = 0;
 
     let mut f = BufWriter::new(fs::File::create(outpath_runtime).unwrap());
-    write!(f, "runtime(ms),steps,rejected_steps\n{:?},{},{}", runtime, step_count,rejected_steps);
+    //write!(f, "runtime(ms),steps,rejected_steps\n{:?},{},{}", runtime, step_count,rejected_steps);
 
     let mut f = BufWriter::new(fs::File::create(outpath).unwrap());
-    write!(f, "state,fraction,time\n");
+    //write!(f, "state,fraction,time\n");
     for node_count in summary {
         counter += 1;
         if result_len > output_rows*2 && counter > 100 && counter < result_len-100 && counter % subsamp_index != 0  {
@@ -471,9 +471,9 @@ fn write_output(summary: Summary, step_count: usize, rejected_steps: usize, runt
         let i_frac = (node_count.infected_count as f32) / number_of_nodes;
         let r_frac = (node_count.recovered_count as f32) / number_of_nodes;
         let time = node_count.current_time;
-        write!(f, "S,{},{}\n", s_frac, time);
-        write!(f, "R,{},{}\n", r_frac, time);
-        write!(f, "I,{},{}\n", i_frac, time);
+        //write!(f, "S,{},{}\n", s_frac, time);
+        //write!(f, "R,{},{}\n", r_frac, time);
+        //write!(f, "I,{},{}\n", i_frac, time);
     }
 
     return;
@@ -551,7 +551,7 @@ fn write_summary(summary: Summary, outpath: &String) {
     let mut counter = 0;
 
     let mut f = BufWriter::new(fs::File::create(outpath).unwrap());
-    write!(f, "State,Fraction,Time,Simulation_run\n");
+    //write!(f, "State,Fraction,Time,Simulation_run\n");
     for node_count in summary {
         counter += 1;
         if result_len > output_rows*2 && counter > 100 && counter < result_len-100 && counter % subsamp_index != 0  {
@@ -563,9 +563,9 @@ fn write_summary(summary: Summary, outpath: &String) {
         let i_frac = (node_count.infected_count as f32) / number_of_nodes;
         let r_frac = (node_count.recovered_count as f32) / number_of_nodes;
         let time = node_count.current_time;
-        write!(f, "S,{},{},{}\n", s_frac, time, node_count.simulation_run);
-        write!(f, "R,{},{},{}\n", r_frac, time, node_count.simulation_run);
-        write!(f, "I,{},{},{}\n", i_frac, time, node_count.simulation_run);
+        //write!(f, "S,{},{},{}\n", s_frac, time, node_count.simulation_run);
+        //write!(f, "R,{},{},{}\n", r_frac, time, node_count.simulation_run);
+        //write!(f, "I,{},{},{}\n", i_frac, time, node_count.simulation_run);
     }
 
     return;
@@ -630,7 +630,7 @@ fn main() {
     //}
 
 
-
+    /*
 
     let mut f = BufWriter::new(fs::File::create(&outpath_TG).unwrap());
     let mut normalize = 0.0;
@@ -664,9 +664,10 @@ fn main() {
         transmission_graph_normalized.insert((*node, dummy_node), 1.0);
          write!(f, "{:?} {:?} {:?}\n", node, dummy_node, 1.0);
     }
+    */
 
-    println!("len summary: {:?}", summary.len());
-    write_summary(summary, &outpath);
+    //println!("len summary: {:?}", summary.len());
+    //write_summary(summary, &outpath);
 
     // write score:
     let mut f = BufWriter::new(fs::File::create(format!("{}.score", &outpath)).unwrap());
@@ -674,6 +675,7 @@ fn main() {
         write!(f, "{:?}\n", score);
     }
 
+    /*
     // write intensity (numer of times nodes became infected):
     // is zero for initially infected nodes
     let mut f = BufWriter::new(fs::File::create(format!("{}.intensity", &outpath_TG)).unwrap());
@@ -684,6 +686,7 @@ fn main() {
             write!(f, "0\n");
         }
     }
+    */
 
 
     //for (edge, counts) in &transmission_graph_normalized {
@@ -719,7 +722,7 @@ fn main() {
         p_dist[i] = p_dist[i]/normalize;
     }
 
-    let mut f = BufWriter::new(fs::File::create(format!("{}.solution", &outpath_TG)).unwrap());
+    /*let mut f = BufWriter::new(fs::File::create(format!("{}.solution", &outpath_TG)).unwrap());
     for i in 0..p_dist.len() {
         write!(f, "{:?}\n", p_dist[i]);
     }
@@ -731,7 +734,7 @@ fn main() {
     println!("rust done\n");
 
     //println!("{:?}\n", &p_dist);
-
+    */
 
     //info!("Number of steps: {}", current_step);
     //save_system_state(&mut summary, current_time, current_counts.clone());

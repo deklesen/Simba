@@ -1,0 +1,5 @@
+.ipynb_checkpoints/
+__pycache__/
+output/
+rust_code/rust_reject/target
+*.log
