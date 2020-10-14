@@ -124,11 +124,11 @@ graphs=filter_graphs({
     **{f'regular{node_num}': regular(node_num) for node_num in [10,20,30,50]},
 })
 
-infection_rates = [1.5]#[0.5,1,1.5,2,2.5]
+infection_rates = [0.5,1,1.5,2,2.5]
 
 init_infecteds_fraction=[0.025,0.05,0.075,0.15,0.25]
 budgets_fraction=[0.025,0.05,0.1,0.15,0.25]
-SIMULATION_RUNS = 1000
+SIMULATION_RUNS = 2000
 
 import pickle
 import tqdm
