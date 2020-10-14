@@ -6,7 +6,7 @@ from pathlib import Path
 import os, time
 import pandas as pd
 
-run_nr=10#random.randint(0,100000)
+run_nr=1337#random.randint(0,100000)
 print("Run number:",run_nr)
 
 
@@ -115,14 +115,20 @@ baselines={
 
 graphs=filter_graphs({
     **{f'geom_graph_{node_num}': geom_graph(node_num) for node_num in [150,300,500,1000,2000,2500]},
-
+    **{f'householdsuper_{node_num}':householdsuper_graph(node_num) for node_num in [150,300,500,1000,2000,2500]},
+    **{f'erdos_renyi_{node_num}': erdos_renyi(node_num) for node_num in [150,300,500,1000,2000,2500]},
+    **{f'barabasi_{node_num}': barabasi(node_num) for node_num in [25,50,100,250,500,1000]},
+    **{f'grid_2d{node_num}': grid_2d(node_num) for node_num in [10,20,30,50]},
+    **{f'newman{node_num}': newman(node_num) for node_num in [10,20,30,50]},
+    **{f'complete{node_num}': complete(node_num) for node_num in [10,20,30,50]},
+    **{f'regular{node_num}': regular(node_num) for node_num in [10,20,30,50]},
 })
 
 infection_rates = [1.5]#[0.5,1,1.5,2,2.5]
 
 init_infecteds_fraction=[0.025,0.05,0.075,0.15,0.25]
 budgets_fraction=[0.025,0.05,0.1,0.15,0.25]
-SIMULATION_RUNS = 1000
+SIMULATION_RUNS = 100
 
 import pickle
 import tqdm

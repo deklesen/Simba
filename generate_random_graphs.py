@@ -55,12 +55,6 @@ def fuzzy_geom_graph(size, radius, deg, ret_coords=True, force_connected=True):
     return None
 
 
-def geom_powerlaw(num_nodes=100, gamma=2.2, min_truncate=2, max_truncate=None, radius=1.0):
-    deg = power_law_degrees(num_nodes=num_nodes, gamma=gamma, min_truncate=min_truncate, max_truncate=max_truncate)
-    G, coords = fuzzy_geom_graph(num_nodes, radius=radius, deg=deg, ret_coords=True, force_connected=True)
-    return G, coords
-
-
 def power_law_degrees(num_nodes=100, gamma=3.0, min_truncate=2, max_truncate=None):
     degree_distribution = [0] + [(k + 1) ** (-gamma) for k in range(num_nodes)]
     degree_distribution[:min_truncate] = [0.0] * min_truncate
@@ -76,12 +70,17 @@ def power_law_degrees(num_nodes=100, gamma=3.0, min_truncate=2, max_truncate=Non
             break
     return degee_sequence
 
+def geom_powerlaw(num_nodes=100, gamma=2.2, min_truncate=2, max_truncate=None, radius=1.0):
+    deg = power_law_degrees(num_nodes=num_nodes, gamma=gamma, min_truncate=min_truncate, max_truncate=max_truncate)
+    G, coords = fuzzy_geom_graph(num_nodes, radius=radius, deg=deg, ret_coords=True, force_connected=True)
+    return G, coords
+
 def householdsuper_graph(num_nodes=100, hh_size_sample = None, gamma=1.8, min_truncate=2, max_truncate=15, seed=100):
     #assert(num_nodes % hh_size == 0)
     #hh_num = int(num_nodes / hh_size)
     #pl_graph, _ = power_law_graph(num_nodes=num_nodes, gamma=gamma, min_truncate=min_truncate, max_truncate=max_truncate, seed=seed)
 
-    pl_graph, _ = barabasi(num_nodes, m=3)
+    pl_graph = barabasi(num_nodes, m=3)
 
     nodes = list(pl_graph.nodes())
 
@@ -170,6 +169,7 @@ def power_law_graph(num_nodes=100, gamma=2.2, min_truncate=2, max_truncate=None,
             return contact_network
 
     print('Failed graph generation')
+    return None
 
 
 def geometric_configuration_model(degree_sequence, coordinates=None, ignore_location=False, mcmc=True):
@@ -341,6 +341,7 @@ def erdos_renyi(num_nodes=100, connect_prob=0.05, mean_degree=None):
             #print("Generated graph mean degree:",np.mean([x[1] for x in G.degree()]))
             G = nx.convert_node_labels_to_integers(G)
             return G
+        connect_prob=connect_prob*1.05
     print('failed graph generation erdos_renyi')
 
 
@@ -351,7 +352,9 @@ def barabasi(num_nodes=100, m=2):
         if nx.is_connected(G):
             G = nx.convert_node_labels_to_integers(G)
             return G
+        m=m*1.05
     print('failed graph generation')
+    return None
 
 
 def regular(num_nodes=100, d=5):
@@ -373,6 +376,7 @@ def newman(num_nodes=100, k=6, p=0.2):
             G = nx.convert_node_labels_to_integers(G)
             return G
     print('failed graph generation')
+    return None
 
 
 def grid_2d(dim=10):
