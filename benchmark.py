@@ -45,7 +45,7 @@ def call_rust(CG, init_infected, path, init_recovered = None, num_run=1000, infe
 
     mean_values = np.loadtxt(out_traj+'.score')
     mean = np.mean(mean_values)
-    stddev np.std(mean_values)
+    stddev = np.std(mean_values)
 
     #number_of_times_infected = np.loadtxt(out_tg+'.intensity')
     #intensity = number_of_times_infected/num_run
