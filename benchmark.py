@@ -180,8 +180,7 @@ if __name__=='__main__':
                             pbar.update(1)
                             if not (run_counter % total_runners == runner_id):
                                 continue
-                            continue
-
+                            
                             budget=int(len(graph)*budget_fraction)
 
                             path="output/benchmark/{run_nr}/infrate{infection_rate}/{graph_name}_inf{init_infected}/{baseline_name}_budget{budget}/"
