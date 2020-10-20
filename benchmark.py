@@ -92,13 +92,19 @@ def filter_graphs(input):
 import numpy as np
 
 def get_graph_data(graph):
-    print(graph)
+    #print(graph)
     degrees = np.array(list(map(lambda x: x[1], graph.degree())))
     return {
         'num_nodes': graph.number_of_nodes(),
         'num_edges': graph.number_of_edges(),
+        'density': nx.density(graph),
         'degree_mean': degrees.mean(),
         'degree_stddev': degrees.std(),
+        'radius': nx.radius(graph),
+        'diameter': nx.diameter(graph),
+        'transitivity': nx.transitivity(graph),
+        'average_clustering': nx.average_clustering(graph),
+        'average_shortest_path_length': nx.average_shortest_path_length(graph), ##slow
     }
 
 baselines={
@@ -124,10 +130,10 @@ graphs=filter_graphs({
     **{f'regular{node_num}': regular(node_num) for node_num in [10,20,30,50]},
 })
 
-infection_rates = [0.5,1,1.5,2,2.5]
+infection_rates = [0.25,0.5,0.75,1,1.25,1.5,1.75,2,2.5]
 
-init_infecteds_fraction=[0.025,0.05,0.075,0.15,0.25]
-budgets_fraction=[0.025,0.05,0.1,0.15,0.25]
+init_infecteds_fraction=[0.025,0.05,0.075,0.1,0.15,0.25]
+budgets_fraction=[0.025,0.05,0.075,0.1,0.15,0.25]
 SIMULATION_RUNS = 2000
 
 import pickle
@@ -150,7 +156,6 @@ if __name__=='__main__':
     with tqdm.tqdm(total=num_experiments) as pbar:
         for infection_rate in infection_rates:
             for graph_name, graph in graphs.items():
-                print(graph)
                 graph_data = {
                     **get_graph_data(graph),
                     'name': graph_name,
