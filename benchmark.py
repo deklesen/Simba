@@ -93,6 +93,7 @@ import numpy as np
 
 def get_graph_data(graph):
     #print(graph)
+    e = nx.eccentricity(graph)
     degrees = np.array(list(map(lambda x: x[1], graph.degree())))
     return {
         'num_nodes': graph.number_of_nodes(),
@@ -100,8 +101,8 @@ def get_graph_data(graph):
         'density': nx.density(graph),
         'degree_mean': degrees.mean(),
         'degree_stddev': degrees.std(),
-        'radius': nx.radius(graph),
-        'diameter': nx.diameter(graph),
+        'radius': min(e),
+        'diameter': max(e),
         'transitivity': nx.transitivity(graph),
         'average_clustering': nx.average_clustering(graph),
         'average_shortest_path_length': nx.average_shortest_path_length(graph), ##slow
@@ -125,21 +126,22 @@ graphs=filter_graphs({
     **{f'erdos_renyi_{node_num}': erdos_renyi(node_num) for node_num in [150,300,500,1000,2000,2500]},
     **{f'barabasi_{node_num}': barabasi(node_num) for node_num in [25,50,100,250,500,1000]},
     **{f'grid_2d{node_num}': grid_2d(node_num) for node_num in [10,20,30,50]},
-    **{f'newman{node_num}': newman(node_num) for node_num in [10,20,30,50]},
-    **{f'complete{node_num}': complete(node_num) for node_num in [10,20,30,50]},
-    **{f'regular{node_num}': regular(node_num) for node_num in [10,20,30,50]},
+    **{f'newman{node_num}': newman(node_num) for node_num in [20,50,100,250,500]},
+    **{f'complete{node_num}': complete(node_num) for node_num in [20,50,100,250,500]},
+    **{f'regular{node_num}': regular(node_num) for node_num in [20,50,100,250,500]},
 })
 
-infection_rates = [0.25,0.5,0.75,1,1.25,1.5,1.75,2,2.5]
+infection_rates =[0.5,1,1.5,2,2.5]
 
 init_infecteds_fraction=[0.025,0.05,0.075,0.1,0.15,0.25]
-budgets_fraction=[0.025,0.05,0.075,0.1,0.15,0.25]
+budgets_fraction=[0.05,0.075,0.1,0.15,0.25]
 SIMULATION_RUNS = 2000
 
 import pickle
 import tqdm
 import time
 import sys
+import math
 
 if __name__=='__main__':
     runner_id = int(sys.argv[1])-1
@@ -152,16 +154,24 @@ if __name__=='__main__':
 
     run_counter=1
 
+    graph_data_dict = {}
+
     results = {}
     with tqdm.tqdm(total=num_experiments) as pbar:
         for infection_rate in infection_rates:
             for graph_name, graph in graphs.items():
-                graph_data = {
-                    **get_graph_data(graph),
-                    'name': graph_name,
-                }
+                if graph_name in graph_data_dict:
+                    graph_data = graph_data_dict[graph_name]
+                else:
+                    graph_data = {
+                        **get_graph_data(graph),
+                        'name': graph_name,
+                    }
+                    graph_data_dict[graph_name] = graph_data
+                #pbar.update(1)
+                ##continue
                 for iif in init_infecteds_fraction:
-                    num_init_infected = int(len(graph)*iif)
+                    num_init_infected = math.ceil(len(graph)*iif)
                     init_infected = random.sample(list(range(len(graph))), num_init_infected)
 
                     for baseline_name, baseline_func in baselines.items():
@@ -170,7 +180,7 @@ if __name__=='__main__':
                             pbar.update(1)
                             if not (run_counter % total_runners == runner_id):
                                 continue
-
+                            continue
 
                             budget=int(len(graph)*budget_fraction)
 
