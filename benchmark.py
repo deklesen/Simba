@@ -117,7 +117,9 @@ baselines={
     'EVcentrality': baseline_EVcentrality,
     'closeness': baseline_closenessCentrality,
     'PageRank': baseline_Pagerank,
-    'PersPageRank': baseline_PersPagerank
+    'PersPageRank': baseline_PersPagerank,
+    #Simba
+    #None
 }
 
 graphs=filter_graphs({
