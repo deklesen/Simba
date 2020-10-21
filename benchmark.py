@@ -4,9 +4,9 @@ import timeit
 from functools import partial
 from pathlib import Path
 import os, time
-import pandas as pd
+#import pandas as pd
 
-run_nr=1339#random.randint(0,100000)
+run_nr=1400#random.randint(0,100000)
 print("Run number:",run_nr)
 
 
@@ -125,15 +125,15 @@ graphs=filter_graphs({
     **{f'householdsuper_{node_num}':householdsuper_graph(node_num) for node_num in [150,300,500,1000,2000,2500]},
     **{f'erdos_renyi_{node_num}': erdos_renyi(node_num) for node_num in [150,300,500,1000,2000,2500]},
     **{f'barabasi_{node_num}': barabasi(node_num) for node_num in [25,50,100,250,500,1000]},
-    **{f'grid_2d{node_num}': grid_2d(node_num) for node_num in [10,20,30,50]},
+    **{f'grid_2d{node_num}': grid_2d(node_num) for node_num in [10,20,30,50,100,250]},
     **{f'newman{node_num}': newman(node_num) for node_num in [20,50,100,250,500]},
     **{f'complete{node_num}': complete(node_num) for node_num in [20,50,100,250,500]},
     **{f'regular{node_num}': regular(node_num) for node_num in [20,50,100,250,500]},
 })
 
-infection_rates = [2]#[1,1.5,2,2.5]
+infection_rates = [1,1.5,2,2.5]
 
-init_infecteds_fraction=[0.025,0.05,0.1,0.2]#[0.025,0.05,0.075,0.1,0.15,0.25]
+init_infecteds_fraction=[0.025,0.05,0.075,0.1,0.15,0.25]
 budgets_fraction=[0.05,0.075,0.1,0.15,0.25]
 SIMULATION_RUNS = 2000
 
