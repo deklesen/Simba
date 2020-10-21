@@ -93,7 +93,7 @@ import numpy as np
 
 def get_graph_data(graph):
     #print(graph)
-    e = nx.eccentricity(graph)
+    e = list(nx.eccentricity(graph).values())
     degrees = np.array(list(map(lambda x: x[1], graph.degree())))
     return {
         'num_nodes': graph.number_of_nodes(),
@@ -121,13 +121,13 @@ baselines={
 }
 
 graphs=filter_graphs({
-    **{f'geom_graph_{node_num}': geom_graph(node_num) for node_num in [150,300,500,1000,2000,2500]},
+    **{f'geom_graph_{node_num}': geom_graph(node_num) for node_num in [150,300,500,1000,2000,2250]},
     **{f'householdsuper_{node_num}':householdsuper_graph(node_num) for node_num in [150,300,500,1000,2000,2500]},
-    **{f'erdos_renyi_{node_num}': erdos_renyi(node_num) for node_num in [150,300,500,1000,2000,2500]},
+    **{f'erdos_renyi_{node_num}': erdos_renyi(node_num) for node_num in [150,300,500,1000,1500]},
     **{f'barabasi_{node_num}': barabasi(node_num) for node_num in [25,50,100,250,500,1000]},
     **{f'grid_2d{node_num}': grid_2d(node_num) for node_num in [10,20,30,50,100,250]},
     **{f'newman{node_num}': newman(node_num) for node_num in [20,50,100,250,500]},
-    **{f'complete{node_num}': complete(node_num) for node_num in [20,50,100,250,500]},
+    **{f'complete{node_num}': complete(node_num) for node_num in [20,50,100,250]},
     **{f'regular{node_num}': regular(node_num) for node_num in [20,50,100,250,500]},
 })
 
@@ -164,7 +164,7 @@ if __name__=='__main__':
                     graph_data = graph_data_dict[graph_name]
                 else:
                     graph_data = {
-                        **get_graph_data(graph),
+                        **get_graph_data(graph.copy()),
                         'name': graph_name,
                     }
                     graph_data_dict[graph_name] = graph_data
@@ -196,7 +196,7 @@ if __name__=='__main__':
                             
                             result_data = {'score_mean':score, 'score_stddev':stddev, 'duration':duration}
 
-                            results[(infection_rate,graph_name,baseline_name,iif,budget)] = (graph_data,result_data)
+                            results[(infection_rate,graph_name,baseline_name,iif,budget_fraction)] = (graph_data,result_data)
                             
 
 
