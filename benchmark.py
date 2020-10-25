@@ -6,7 +6,7 @@ from pathlib import Path
 import os, time
 #import pandas as pd
 
-run_nr=1423#random.randint(0,100000)
+run_nr=1997#random.randint(0,100000)
 print("Run number:",run_nr)
 
 
@@ -183,6 +183,7 @@ if __name__=='__main__':
     print("Doing", num_experiments, "experiments...")
 
     run_counter=1
+    true_executes=0
 
     graph_data_dict = {}
 
@@ -226,8 +227,6 @@ if __name__=='__main__':
                             
                             budget=int(len(graph)*budget_fraction)
 
-
-                            
                             start_time = time.time()
                             vaccinated = baseline_func(CG=graph.copy(), init_infected=init_infected, budget=budget, infection_rate=infection_rate, max_steps=SIMBA_OPTSTEPS, outpath=Simba_outpath)
                             duration = time.time() - start_time
@@ -237,6 +236,12 @@ if __name__=='__main__':
                             result_data = {'score_mean':score, 'score_stddev':stddev, 'duration':duration}
 
                             results[(infection_rate,graph_name,baseline_name,iif,budget_fraction)] = (graph_data,result_data)
+
+                            true_executes += 1
+                            if ((true_executes % 100) == 0):
+                                print("Writing temporary results...")
+                                with open("output/benchmark/{run_nr}/results_{runner_id}.pickle".format(run_nr=run_nr,runner_id=runner_id), 'wb') as handle:
+                                    pickle.dump(results, handle, protocol=pickle.HIGHEST_PROTOCOL)
                             
 
 
