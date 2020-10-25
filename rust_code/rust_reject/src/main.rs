@@ -298,10 +298,10 @@ fn setup_graph(
     }
 }
 
-fn read_arguments() -> (String, String, String, f64, usize) {
+fn read_arguments() -> (String, String, String, f64, usize, String) {
     //(graphpath, outpath_traj, outpath_TG, outpath_score, infection_rate)
     let args: Vec<String> = env::args().collect();
-    return (args[1].clone(), args[2].clone(), args[3].clone(), args[4].clone().to_string().parse::<f64>().unwrap(), args[5].clone().to_string().parse::<usize>().unwrap());
+    return (args[1].clone(), args[2].clone(), args[3].clone(), args[4].clone().to_string().parse::<f64>().unwrap(), args[5].clone().to_string().parse::<usize>().unwrap(),args[6].clone());
 }
 
 
@@ -456,10 +456,10 @@ fn write_output(summary: Summary, step_count: usize, rejected_steps: usize, runt
     let mut counter = 0;
 
     let mut f = BufWriter::new(fs::File::create(outpath_runtime).unwrap());
-    //write!(f, "runtime(ms),steps,rejected_steps\n{:?},{},{}", runtime, step_count,rejected_steps);
+    write!(f, "runtime(ms),steps,rejected_steps\n{:?},{},{}", runtime, step_count,rejected_steps);
 
     let mut f = BufWriter::new(fs::File::create(outpath).unwrap());
-    //write!(f, "state,fraction,time\n");
+    write!(f, "state,fraction,time\n");
     for node_count in summary {
         counter += 1;
         if result_len > output_rows*2 && counter > 100 && counter < result_len-100 && counter % subsamp_index != 0  {
@@ -471,9 +471,9 @@ fn write_output(summary: Summary, step_count: usize, rejected_steps: usize, runt
         let i_frac = (node_count.infected_count as f32) / number_of_nodes;
         let r_frac = (node_count.recovered_count as f32) / number_of_nodes;
         let time = node_count.current_time;
-        //write!(f, "S,{},{}\n", s_frac, time);
-        //write!(f, "R,{},{}\n", r_frac, time);
-        //write!(f, "I,{},{}\n", i_frac, time);
+        write!(f, "S,{},{}\n", s_frac, time);
+        write!(f, "R,{},{}\n", r_frac, time);
+        write!(f, "I,{},{}\n", i_frac, time);
     }
 
     return;
@@ -551,7 +551,7 @@ fn write_summary(summary: Summary, outpath: &String) {
     let mut counter = 0;
 
     let mut f = BufWriter::new(fs::File::create(outpath).unwrap());
-    //write!(f, "State,Fraction,Time,Simulation_run\n");
+    write!(f, "State,Fraction,Time,Simulation_run\n");
     for node_count in summary {
         counter += 1;
         if result_len > output_rows*2 && counter > 100 && counter < result_len-100 && counter % subsamp_index != 0  {
@@ -563,9 +563,9 @@ fn write_summary(summary: Summary, outpath: &String) {
         let i_frac = (node_count.infected_count as f32) / number_of_nodes;
         let r_frac = (node_count.recovered_count as f32) / number_of_nodes;
         let time = node_count.current_time;
-        //write!(f, "S,{},{},{}\n", s_frac, time, node_count.simulation_run);
-        //write!(f, "R,{},{},{}\n", r_frac, time, node_count.simulation_run);
-        //write!(f, "I,{},{},{}\n", i_frac, time, node_count.simulation_run);
+        write!(f, "S,{},{},{}\n", s_frac, time, node_count.simulation_run);
+        write!(f, "R,{},{},{}\n", r_frac, time, node_count.simulation_run);
+        write!(f, "I,{},{},{}\n", i_frac, time, node_count.simulation_run);
     }
 
     return;
@@ -576,8 +576,9 @@ fn write_summary(summary: Summary, outpath: &String) {
 // call from root with ./rust_reject/target/release/rust_reject example_networks/chain_graph.txt out_trajectory.txt out_TG 2.2 33        //
 fn main() {
     simple_logger::init_with_level(log::Level::Warn).unwrap();
-    let (graphpath, outpath, outpath_TG, infection_rate, num_run) = read_arguments();
-    println!("Input: {:?}", (&graphpath, &outpath, &outpath_TG, infection_rate, num_run));
+    let (graphpath, outpath, outpath_TG, infection_rate, num_run, write_output_string) = read_arguments();
+    let write_output: bool = (write_output_string=="Yes");
+    println!("Input: {:?}", (&graphpath, &outpath, &outpath_TG, infection_rate, num_run, write_output, write_output_string));
     let stopwatch = Stopwatch::start_new();
 
     let mut current_counts: CountsAtTime = CountsAtTime {
@@ -630,44 +631,46 @@ fn main() {
     //}
 
 
-    /*
 
-    let mut f = BufWriter::new(fs::File::create(&outpath_TG).unwrap());
-    let mut normalize = 0.0;
-    for (edge, counts) in &transmission_graph {
-        if transmission_graph.contains_key(&(edge.0, edge.0)) && edge.0 != edge.1{
-            normalize = transmission_graph[&(edge.0, edge.0)];
-            if normalize > 0.0 {
-                transmission_graph_normalized.insert((edge.0, edge.1), counts/normalize);
-                write!(f, "{:?} {:?} {:?}\n", edge.0, edge.1, counts/normalize);
+    if write_output{
+            
+        let mut f = BufWriter::new(fs::File::create(&outpath_TG).unwrap());
+        let mut normalize = 0.0;
+        for (edge, counts) in &transmission_graph {
+            if transmission_graph.contains_key(&(edge.0, edge.0)) && edge.0 != edge.1{
+                normalize = transmission_graph[&(edge.0, edge.0)];
+                if normalize > 0.0 {
+                    transmission_graph_normalized.insert((edge.0, edge.1), counts/normalize);
+                    write!(f, "{:?} {:?} {:?}\n", edge.0, edge.1, counts/normalize);
+                }
             }
         }
-    }
 
-    let mut inf_total = 0.0;
-    for node in 0..graph.len() {
-        if transmission_graph.contains_key(&(node, node)) {
-            inf_total = inf_total +  transmission_graph[&(node, node)]
+        let mut inf_total = 0.0;
+        for node in 0..graph.len() {
+            if transmission_graph.contains_key(&(node, node)) {
+                inf_total = inf_total +  transmission_graph[&(node, node)]
+            }
         }
-    }
-    let dummy_node: usize = graph.len();
+        let dummy_node: usize = graph.len();
 
-    for node in 0..graph.len() {
-        if transmission_graph.contains_key(&(node, node)) {
-            let prob = transmission_graph[&(node,node)] / inf_total;
-            transmission_graph_normalized.insert((dummy_node, node), prob);
-            write!(f, "{:?} {:?} {:?}\n", dummy_node, node, prob);
+        for node in 0..graph.len() {
+            if transmission_graph.contains_key(&(node, node)) {
+                let prob = transmission_graph[&(node,node)] / inf_total;
+                transmission_graph_normalized.insert((dummy_node, node), prob);
+                write!(f, "{:?} {:?} {:?}\n", dummy_node, node, prob);
+            }
         }
-    }
 
-    for node in &initially_infected {
-        transmission_graph_normalized.insert((*node, dummy_node), 1.0);
-         write!(f, "{:?} {:?} {:?}\n", node, dummy_node, 1.0);
-    }
-    */
+        for node in &initially_infected {
+            transmission_graph_normalized.insert((*node, dummy_node), 1.0);
+            write!(f, "{:?} {:?} {:?}\n", node, dummy_node, 1.0);
+        }
 
-    //println!("len summary: {:?}", summary.len());
-    //write_summary(summary, &outpath);
+        println!("len summary: {:?}", summary.len());
+        write_summary(summary, &outpath);
+
+    }
 
     // write score:
     let mut f = BufWriter::new(fs::File::create(format!("{}.score", &outpath)).unwrap());
@@ -675,66 +678,66 @@ fn main() {
         write!(f, "{:?}\n", score);
     }
 
-    /*
-    // write intensity (numer of times nodes became infected):
-    // is zero for initially infected nodes
-    let mut f = BufWriter::new(fs::File::create(format!("{}.intensity", &outpath_TG)).unwrap());
-    for node in 0..graph.len() {
-        if transmission_graph.contains_key(&(node, node)) {
-            write!(f, "{:?}\n", transmission_graph[&(node, node)]);
-        } else {
-            write!(f, "0\n");
+    if write_output{
+        // write intensity (numer of times nodes became infected):
+        // is zero for initially infected nodes
+        let mut f = BufWriter::new(fs::File::create(format!("{}.intensity", &outpath_TG)).unwrap());
+        for node in 0..graph.len() {
+            if transmission_graph.contains_key(&(node, node)) {
+                write!(f, "{:?}\n", transmission_graph[&(node, node)]);
+            } else {
+                write!(f, "0\n");
+            }
         }
     }
-    */
 
 
     //for (edge, counts) in &transmission_graph_normalized {
     //    println!("{:?}: \"{:?}\"", edge, counts);
     //}
+    if write_output{
+        // solve:  TG
+        let number_of_nodes = graph.len() + 1; // +1 is dummy
+        let mut p_dist : Vec<f64> = vec![1.0/(number_of_nodes as f64); number_of_nodes];
+        for step_i in 0..1000 {
+            let mut p_dist_new : Vec<f64> = vec![0.0; number_of_nodes];
+            for (edge, weight) in &transmission_graph_normalized {
+                if edge.0 != edge.1 {
+                    p_dist_new[edge.1] += p_dist[edge.0] * weight;
+                }
+            }
+            p_dist = p_dist_new.clone();
 
-    // solve:  TG
-    let number_of_nodes = graph.len() + 1; // +1 is dummy
-    let mut p_dist : Vec<f64> = vec![1.0/(number_of_nodes as f64); number_of_nodes];
-    for step_i in 0..1000 {
-        let mut p_dist_new : Vec<f64> = vec![0.0; number_of_nodes];
-        for (edge, weight) in &transmission_graph_normalized {
-            if edge.0 != edge.1 {
-                p_dist_new[edge.1] += p_dist[edge.0] * weight;
+            // normalize against numerical problems
+            let normalize: f64 = p_dist.iter().sum();
+            for i in 0..p_dist.len(){
+                p_dist[i] = p_dist[i]/normalize;
             }
         }
-        p_dist = p_dist_new.clone();
 
-        // normalize against numerical problems
+        let lel = p_dist.len()-1;
+        p_dist[lel] = 0.0;
+        for node in initially_infected {
+            p_dist[node] = 0.0;
+        }
         let normalize: f64 = p_dist.iter().sum();
         for i in 0..p_dist.len(){
             p_dist[i] = p_dist[i]/normalize;
         }
+
+        let mut f = BufWriter::new(fs::File::create(format!("{}.solution", &outpath_TG)).unwrap());
+        for i in 0..p_dist.len() {
+            write!(f, "{:?}\n", p_dist[i]);
+        }
+
+        let mut f = BufWriter::new(fs::File::create(format!("{}.elapsedTime", &outpath_TG)).unwrap());
+            write!(f, "Elapsed Time: {:?} ms", &elapsed_time);
+
     }
-
-    let lel = p_dist.len()-1;
-    p_dist[lel] = 0.0;
-    for node in initially_infected {
-        p_dist[node] = 0.0;
-    }
-    let normalize: f64 = p_dist.iter().sum();
-    for i in 0..p_dist.len(){
-        p_dist[i] = p_dist[i]/normalize;
-    }
-
-    /*let mut f = BufWriter::new(fs::File::create(format!("{}.solution", &outpath_TG)).unwrap());
-    for i in 0..p_dist.len() {
-        write!(f, "{:?}\n", p_dist[i]);
-    }
-
-    let mut f = BufWriter::new(fs::File::create(format!("{}.elapsedTime", &outpath_TG)).unwrap());
-        write!(f, "Elapsed Time: {:?} ms", &elapsed_time);
-
-
     println!("rust done\n");
 
     //println!("{:?}\n", &p_dist);
-    */
+
 
     //info!("Number of steps: {}", current_step);
     //save_system_state(&mut summary, current_time, current_counts.clone());

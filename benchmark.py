@@ -6,7 +6,7 @@ from pathlib import Path
 import os, time
 #import pandas as pd
 
-run_nr=1400#random.randint(0,100000)
+run_nr=1423#random.randint(0,100000)
 print("Run number:",run_nr)
 
 
@@ -36,7 +36,7 @@ def call_rust(CG, init_infected, path, init_recovered = None, num_run=1000, infe
             f.write('{};{};{}\n'.format(n,l,neigh_list))
 
     #print('start rust')
-    os.system('.{} {} {} {} {} {} > /dev/null'.format(exec, graph, out_traj, out_tg, infection_rate, num_run))
+    os.system('.{} {} {} {} {} {} {} > /dev/null'.format(exec, graph, out_traj, out_tg, infection_rate, num_run, "No"))
     #time.sleep(0.05)
     #print('rust ended, back in python')
 
@@ -108,6 +108,33 @@ def get_graph_data(graph):
         'average_shortest_path_length': nx.average_shortest_path_length(graph), ##slow
     }
 
+def get_graph_data_dynamic(CG, infected_list):
+    if len(infected_list) == 0:
+        return {
+            'dyn_PersPR': -1,
+            'dyn_eccentricity': -1,
+            'dyn_clustering': -1,
+        }
+
+    pagerank_personalization = [1]*len(CG.nodes)
+    for inf_index in infected_list:
+        pagerank_personalization[inf_index] = 10
+    pagerank_personalization_dict = dict(zip(range(0,len(pagerank_personalization)),pagerank_personalization))
+
+    pers_pagerank_scores = nx.pagerank(CG, personalization=pagerank_personalization_dict)
+    pr_scores_infecteds = [v for k,v in pers_pagerank_scores.items() if k in infected_list]
+
+    eccentricities_infecteds = [nx.eccentricity(CG, n) for n in infected_list]
+
+    result= {
+        'dyn_PersPR': np.mean(pr_scores_infecteds),
+        'dyn_eccentricity': np.mean(eccentricities_infecteds),
+        'dyn_clustering': nx.average_clustering(graph, nodes=infected_list),
+    }
+    return result
+
+from functools import partial
+
 baselines={
     'random': baseline_random,
     #'dava': baseline_dava,
@@ -118,26 +145,27 @@ baselines={
     'closeness': baseline_closenessCentrality,
     'PageRank': baseline_Pagerank,
     'PersPageRank': baseline_PersPagerank,
-    #Simba
-    #None
+    'Simba': baseline_Simba,
+    'None': baseline_none,
 }
 
 graphs=filter_graphs({
     **{f'geom_graph_{node_num}': geom_graph(node_num) for node_num in [150,300,500,1000,2000,2250]},
-    **{f'householdsuper_{node_num}':householdsuper_graph(node_num) for node_num in [150,300,500,1000,2000,2500]},
-    **{f'erdos_renyi_{node_num}': erdos_renyi(node_num) for node_num in [150,300,500,1000,1500]},
-    **{f'barabasi_{node_num}': barabasi(node_num) for node_num in [25,50,100,250,500,1000]},
     **{f'grid_2d{node_num}': grid_2d(node_num) for node_num in [10,20,30,50,100,250]},
     **{f'newman{node_num}': newman(node_num) for node_num in [20,50,100,250,500]},
     **{f'complete{node_num}': complete(node_num) for node_num in [20,50,100,250]},
     **{f'regular{node_num}': regular(node_num) for node_num in [20,50,100,250,500]},
+    **{f'householdsuper_{node_num}':householdsuper_graph(node_num) for node_num in [150,300,500,1000,2000,2500]},
+    **{f'erdos_renyi_{node_num}': erdos_renyi(node_num) for node_num in [150,300,500,1000,1500]},
+    **{f'barabasi_{node_num}': barabasi(node_num) for node_num in [25,50,100,250,500,1000]},
 })
 
 infection_rates = [1,1.5,2,2.5]
 
 init_infecteds_fraction=[0.025,0.05,0.075,0.1,0.15,0.25]
 budgets_fraction=[0.05,0.075,0.1,0.15,0.25]
-SIMULATION_RUNS = 2000
+SIMULATION_RUNS = 1000
+SIMBA_OPTSTEPS=5
 
 import pickle
 import tqdm
@@ -158,6 +186,14 @@ if __name__=='__main__':
 
     graph_data_dict = {}
 
+    outpath=f"output/benchmark/{run_nr}/{runner_id}/"
+    Simba_path = outpath+"Simba/"
+    Simba_outpath = Simba_path+"{type}.{fileformat}"
+    if not (Path(outpath).exists()):
+        Path(outpath).mkdir(parents=True)
+    if not (Path(Simba_path).exists()):
+        Path(Simba_path).mkdir(parents=True)
+
     results = {}
     with tqdm.tqdm(total=num_experiments) as pbar:
         for infection_rate in infection_rates:
@@ -176,6 +212,11 @@ if __name__=='__main__':
                     num_init_infected = math.ceil(len(graph)*iif)
                     init_infected = random.sample(list(range(len(graph))), num_init_infected)
 
+                    graph_data = {
+                        **graph_data,
+                        **get_graph_data_dynamic(graph.copy(), init_infected)
+                    }
+
                     for baseline_name, baseline_func in baselines.items():
                         for budget_fraction in budgets_fraction:   
                             run_counter+=1
@@ -185,13 +226,10 @@ if __name__=='__main__':
                             
                             budget=int(len(graph)*budget_fraction)
 
-                            path="output/benchmark/{run_nr}/infrate{infection_rate}/{graph_name}_inf{init_infected}/{baseline_name}_budget{budget}/"
-                            outpath = path.format(run_nr=run_nr, infection_rate=infection_rate, graph_name=graph_name, init_infected=num_init_infected, baseline_name=baseline_name, budget=budget)
-                            if not Path(outpath).exists():
-                                Path(outpath).mkdir(parents=True)
+
                             
                             start_time = time.time()
-                            vaccinated = baseline_func(graph.copy(), init_infected, budget)
+                            vaccinated = baseline_func(CG=graph.copy(), init_infected=init_infected, budget=budget, infection_rate=infection_rate, max_steps=SIMBA_OPTSTEPS, outpath=Simba_outpath)
                             duration = time.time() - start_time
 
                             score, stddev = call_rust(graph.copy(), init_infected, path=outpath, init_recovered=vaccinated, infection_rate=infection_rate, num_run=SIMULATION_RUNS)

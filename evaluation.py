@@ -43,6 +43,24 @@ def speed_test(num_node_list = None, degree_list = None):
             #analysis(gg.regular(num_nodes=num_nodes, d=d), 'regular_{}_{}_a'.format(num_nodes, d), infection_rate=3.0 / d, budget=2, init_infected=[0])
             #analysis(gg.regular(num_nodes=num_nodes, d=d), 'regular_{}_{}_b'.format(num_nodes, d), infection_rate=3.0 / d, budget=10, init_infected=[0, 1, 2, 3, 4])
 
+def dava_score(CG, init_infected, budget, fast=False, inf_rate=None):
+    #candidates =  [int(n) for n in CG.nodes if n not in init_infected]
+    #vaccinated = list(np.random.choice(candidates, budget))
+    #return vaccinated
+
+    from standalone_dava import dava_intervention
+    edge_list = list(CG.edges())
+    if inf_rate is None:
+        si_transmit_prob = 1.0
+    else:
+        si_transmit_prob = inf_rate/(inf_rate + 1)
+    edge_list = [(x,y,0.5) for x,y in edge_list]
+    node_ids = dava_intervention(edge_list, infected_list=init_infected, recovered_list=[], k=budget, plotting=False, fast=fast)
+    assert(len(node_ids) == budget)
+    for node in node_ids:
+        assert(node not in init_infected)
+    return node_ids
+
 def plot_optimization_summary(optimization_summary, outpath, no_vacc_score=None, random_score=None, davaf=None, dava=None, pagerank_baseline=None, pers_pagerank_baseline=None, degree_baseline=None):
     optimization_best = list()
     for i in range(len( optimization_summary['score'])):
@@ -210,9 +228,12 @@ def plot_TG(TG, outpath, init_infected, eq_dist, number_of_times_infected, init_
     plt.savefig(outpath, bbox_inches='tight', dpi=300)
 
 
-import os, time
-import pandas as pd
+
 def call_rust(CG, init_infected, path, type, init_recovered = None, num_run=1000, infection_rate=2.0):
+    import os, time
+    import pandas as pd
+
+
     exec = '/rust_code/rust_reject/target/release/rust_reject'
     graph = path.format(type='init_graph_'+type, fileformat='txt')
     out_traj = path.format(type='out_trajectory_'+type, fileformat='txt')
@@ -235,10 +256,10 @@ def call_rust(CG, init_infected, path, type, init_recovered = None, num_run=1000
             neigh_list = ','.join([str(v) for v in neigh_list])
             f.write('{};{};{}\n'.format(n,l,neigh_list))
 
-    print('start rust')
-    os.system('.{} {} {} {} {} {}'.format(exec, graph, out_traj, out_tg, infection_rate, num_run))
+    #print('start rust')
+    os.system('.{} {} {} {} {} {} Yes > /dev/null'.format(exec, graph, out_traj, out_tg, infection_rate, num_run))
     time.sleep(0.05)
-    print('rust ended, back in python')
+    #print('rust ended, back in python')
 
     traj_data = pd.read_csv(out_traj, sep=',')
     TG = nx.read_weighted_edgelist(out_tg, create_using=nx.DiGraph(), delimiter=' ', nodetype=int)
@@ -257,7 +278,7 @@ def call_rust(CG, init_infected, path, type, init_recovered = None, num_run=1000
     eq_dist = np.loadtxt(out_tg+'.solution')
 
     # plot graphs
-    if CG.number_of_nodes() < PLOTLIM:
+    if False and CG.number_of_nodes() < PLOTLIM:
         #pass
         pos_cg = nx.kamada_kawai_layout(CG)
         pos_cg = [(pos_cg[i][0], pos_cg[i][1]) for i in range(CG.number_of_nodes())]
@@ -265,7 +286,7 @@ def call_rust(CG, init_infected, path, type, init_recovered = None, num_run=1000
         plot_contact_graph(CG, path.format(type='init_graph_'+type, fileformat='pdf'), init_infected, init_recovered=init_recovered, pos=pos_cg)
         plot_TG(TG, path.format(type='transm_graph_'+type, fileformat='pdf'), init_infected, eq_dist, number_of_times_infected, init_recovered=init_recovered, pos=pos_tg,  CG=CG, pos_cg=pos_cg)
 
-    print('output done in call rust')
+    #print('output done in call rust')
     return CG, TG, traj_data, final_unaffected_mean, eq_dist
 
 
@@ -293,79 +314,8 @@ def vacc_strategy_greedy(CG, init_infected, outpath, budget=2, max_steps=100, in
     # Baseline
     ################################################################################
 
-    print('__Start vaccination baseline__')
+    #print('__Start vaccination baseline__')
     CG, TG, traj_data, baseline_score_novaccine, eq_dist = call_rust(CG, init_infected, path=outpath, type='baseline', infection_rate=infection_rate)
-
-    ################################################################################
-    # Performance Baselines
-    ################################################################################
-
-    # Random
-    scores = list()
-    candidates = [int(n) for n in CG.nodes if n not in init_infected]
-    for _ in range(10):
-        vaccinated = list(np.random.choice(candidates, budget))
-        CG, TG, traj_data, score_rnd, eq_dist_rnd = call_rust(CG, init_infected, path=outpath, init_recovered=vaccinated,
-                                                                         type='random', infection_rate=infection_rate)
-        scores.append(score_rnd)
-    baseline_score_random = np.mean(scores)
-
-    # Dava
-    dava_vaccinated = dava_score(CG, init_infected, budget, fast=False, inf_rate=infection_rate)
-    CG, TG, traj_data, dava_baseline, eq_dist_dava = call_rust(CG, init_infected, path=outpath, type='dava', infection_rate=infection_rate, init_recovered=dava_vaccinated)
-
-    # Dava fast
-    davaf_vaccinated = dava_score(CG, init_infected, budget, fast=True, inf_rate=infection_rate)
-    CG, TG, traj_dataf, davaf_baseline, eq_dist_davaf = call_rust(CG, init_infected, path=outpath, type='davafast', infection_rate=infection_rate, init_recovered=davaf_vaccinated)
-
-    # Degree
-    candidates = [n for n in CG.nodes if n not in init_infected]
-    degrees = list(CG.degree(candidates))
-    degrees.sort(key=lambda x:x[1], reverse=True)
-    degree_vaccinated = list(map(lambda x: x[0], degrees[:budget]))
-    CG, TG, traj_data, degree_baseline, eq_dist_degree = call_rust(CG, init_infected, path=outpath, type='degree', infection_rate=infection_rate, init_recovered=degree_vaccinated)
-
-    # Between-ness
-    betweenness = list(CG.betweenness_centrality())
-    betweenness.sort(key=lambda x:x[1], reverse=True)
-    betweenness_notinf = {node:value for (node,value) in betweenness.items() if node not in init_infected}
-    betweenness_vaccinated = list(map(lambda x: x[0], betweenness_notinf[:budget]))
-    CG, TG, traj_data, betweenness_baseline, eq_dist_betweenness = call_rust(CG, init_infected, path=outpath, type='betweenness', infection_rate=infection_rate, init_recovered=betweenness_vaccinated)
-
-    # eigenvector centrality
-    evcentrality = list(CG.eigenvector_centrality())
-    evcentrality.sort(key=lambda x:x[1], reverse=True)
-    evcentrality_notinf = {node:value for (node,value) in evcentrality.items() if node not in init_infected}
-    evcentrality_vaccinated = list(map(lambda x: x[0], evcentrality_notinf[:budget]))
-    CG, TG, traj_data, evcentrality_baseline, eq_dist_evcentrality = call_rust(CG, init_infected, path=outpath, type='evcentrality', infection_rate=infection_rate, init_recovered=evcentrality_vaccinated)
-
-    # closeness centrality
-    
-    closeness = list(CG.closeness_centrality())
-    closeness.sort(key=lambda x:x[1], reverse=True)
-    closeness_notinf = {node:value for (node,value) in closeness.items() if node not in init_infected}
-    closeness_vaccinated = list(map(lambda x: x[0], closeness_notinf[:budget]))
-    CG, TG, traj_data, closeness_baseline, eq_dist_closeness = call_rust(CG, init_infected, path=outpath, type='closeness', infection_rate=infection_rate, init_recovered=closeness_vaccinated)
-
-
-    # PageRank
-    pagerank_scores = nx.pagerank(CG)
-    pagerank_scores_filtered = list(filter(lambda elem: elem[0] not in init_infected, pagerank_scores.items()))
-    pagerank_scores_filtered.sort(key=lambda x:x[1], reverse=True)
-    pagerank_vaccinated = list(map(lambda x: x[0], pagerank_scores_filtered[:budget]))
-    CG, TG, traj_data, pagerank_baseline, eq_dist_pagerank = call_rust(CG, init_infected, path=outpath, type='pagerank', infection_rate=infection_rate, init_recovered=pagerank_vaccinated)
-
-    # Personalized PageRank
-    pagerank_personalization = [1]*len(CG.nodes)
-    for inf_index in [int(n) for n in CG.nodes if n in init_infected]:
-        pagerank_personalization[inf_index] = 5
-    pagerank_personalization_dict = dict(zip(range(0,len(pagerank_personalization)),pagerank_personalization))
-
-    pers_pagerank_scores = nx.pagerank(CG, personalization=pagerank_personalization_dict)
-    pers_pagerank_scores_filtered = list(filter(lambda elem: elem[0] not in init_infected, pers_pagerank_scores.items()))
-    pers_pagerank_scores_filtered.sort(key=lambda x:x[1], reverse=True)
-    pers_pagerank_vaccinated = list(map(lambda x: x[0], pers_pagerank_scores_filtered[:budget]))
-    CG, TG, traj_data, pers_pagerank_baseline, eq_dist_pers_pagerank = call_rust(CG, init_infected, path=outpath, type='pers_pagerank', infection_rate=infection_rate, init_recovered=pers_pagerank_vaccinated)
 
     ################################################################################
     # Optimization
@@ -375,7 +325,7 @@ def vacc_strategy_greedy(CG, init_infected, outpath, budget=2, max_steps=100, in
     vaccinated = list()
     used_combinations = list()
     optimization_summary = {'step_i': list(), 'score': list(), 'vaccinated': list()}
-    print('__Start vaccination optimization__')
+    #print('__Start vaccination optimization__')
     # init
     node_candidates = [n for n in range(len(eq_dist)-1) if n not in init_infected and n not in vaccinated] #-1 important to not vacc dummy
     rank = sorted([(i,eq_dist[i]) for i in node_candidates], key= lambda  x: -x[1])
@@ -387,12 +337,12 @@ def vacc_strategy_greedy(CG, init_infected, outpath, budget=2, max_steps=100, in
     for step_i in range(max_steps+budget):
         step_i_str = str(step_i).zfill(6)
         removed = -1 #dummy
-        print('vaccinated goes from: ', vaccinated)
+        #print('vaccinated goes from: ', vaccinated)
         if len(vaccinated) == budget and budget > 1:
             random.shuffle(vaccinated)
             removed = vaccinated[0]
             vaccinated = vaccinated[1:]
-        print('to: ', vaccinated)
+        #print('to: ', vaccinated)
         CG, TG, traj_data, score, eq_dist = call_rust(CG, init_infected, path=outpath, init_recovered=vaccinated,
                                                                          type=step_i_str, infection_rate=infection_rate)
 
@@ -434,21 +384,21 @@ def vacc_strategy_greedy(CG, init_infected, outpath, budget=2, max_steps=100, in
                                                                          type=step_i_str+'b', infection_rate=infection_rate)
         results.append((score, sorted(vaccinated), step_i))
         results = sorted(results, key=lambda x: -x[0])
-        print('results: ', results if len(results) < 100 else results[:100])
+        #print('results: ', results if len(results) < 100 else results[:100])
         optimization_summary['score'].append(score)
         optimization_summary['step_i'].append(step_i)
         optimization_summary['vaccinated'].append(str(vaccinated).replace(',',';'))
 
         # not that doing this in each iteration might be expensive
-        if step_i>2 and step_i%5==0:
-            pd.DataFrame(optimization_summary).to_csv(outpath.format(type='optimization_summary', fileformat='csv'))
-            plot_optimization_summary(optimization_summary, outpath.format(type='optimization_summary', fileformat='pdf'), no_vacc_score=baseline_score_novaccine, random_score = baseline_score_random, davaf=davaf_baseline, dava=dava_baseline, pagerank_baseline=pagerank_baseline, pers_pagerank_baseline=pers_pagerank_baseline,degree_baseline=degree_baseline)
+        #if step_i>2:
+        #    pd.DataFrame(optimization_summary).to_csv(outpath.format(type='optimization_summary', fileformat='csv'))
+        #    plot_optimization_summary(optimization_summary, outpath.format(type='optimization_summary', fileformat='pdf'), no_vacc_score=baseline_score_novaccine, random_score = baseline_score_random, davaf=davaf_baseline, dava=dava_baseline, pagerank_baseline=pagerank_baseline, pers_pagerank_baseline=pers_pagerank_baseline,degree_baseline=degree_baseline)
 
-    print('final results:')
+    #print('final results:')
     results = sorted(results, key=lambda x: -x[0])
-    print(results)
-    return CG, results
-
+    #print(results)
+    #return CG, results
+    return results[0][1]
 
 
 
@@ -470,16 +420,4 @@ def analysis(CG, name, infection_rate=2.0, budget=1, max_steps=OPTIMSTEPS, init_
 
 
 # for testing (includes plotting each step)
-analysis(gg.geom_graph(40), 'SmallTestNetwork', infection_rate=2.0, budget=2, init_infected=[10,11])
-
-
-# Don't run experiments in test enviroment
-if 'TRAVIS' not in os.environ:
-    pass
-    # candidates (unfort. some non-det. somewhere (maybe in graph generatino))
-   # analysis(gg.geom_graph(100, 0.01), 'Exp1_Geom', infection_rate=1.0, budget=2, init_infected=[0,1,2,3,4])
-   # analysis(gg.erdos_renyi(1000,0.01), 'Exp2_Erdos', infection_rate=1.3, budget=3, init_infected=[0])
-    #analysis(gg.barabasi(10000), 'Exp3_BA', infection_rate=0.6, budget=10, init_infected=[100, 101,102,103,104,105,106,107,108,109])
-
-    # speed test, might take a while
-  #  speed_test()
+#analysis(gg.geom_graph(40), 'SmallTestNetwork', infection_rate=2.0, budget=2, init_infected=[10,11])

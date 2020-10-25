@@ -1,5 +1,23 @@
 import random
 import networkx as nx
+from evaluation import vacc_strategy_greedy
+import logging
+
+def baseline_Simba(CG, init_infected, budget, outpath, infection_rate, max_steps, **kwargs):
+    import traceback
+    try:
+        
+        return vacc_strategy_greedy(CG, init_infected, outpath, max_steps=max_steps, infection_rate=infection_rate, budget=budget)
+    except Exception as err:
+        traceback.print_tb(err.__traceback__)
+        logging.info(str(err.__traceback__))
+        logging.info(''.join(traceback.format_stack()))
+        exit()
+       # time.sleep(5)
+
+
+def baseline_none(*args,**kwargs):
+    return []
 
 def baseline_random(CG, init_infected, budget, **kwargs):
     candidates = [int(n) for n in CG.nodes if n not in init_infected]
@@ -78,7 +96,7 @@ def baseline_PersPagerank(CG, init_infected, budget,**kwargs):
     # Personalized PageRank
     pagerank_personalization = [1]*len(CG.nodes)
     for inf_index in [int(n) for n in CG.nodes if n in init_infected]:
-        pagerank_personalization[inf_index] = 5
+        pagerank_personalization[inf_index] = 10
     pagerank_personalization_dict = dict(zip(range(0,len(pagerank_personalization)),pagerank_personalization))
 
     pers_pagerank_scores = nx.pagerank(CG, personalization=pagerank_personalization_dict)

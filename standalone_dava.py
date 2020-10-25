@@ -59,7 +59,7 @@ class DAVA_intervention():
             dgraph.g.vs()[r]["vaccinated"] = True  # only used for plotting
 
         end = time.time()
-        print(f"Running dava took {end-start} seconds.")
+        #print(f"Running dava took {end-start} seconds.")
         return vacc_indexes
 
     # Combines all infected nodes into one infected node
