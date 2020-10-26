@@ -5,8 +5,12 @@ from functools import partial
 from pathlib import Path
 import os, time
 #import pandas as pd
+import numpy as np
 
-run_nr=1997#random.randint(0,100000)
+
+run_nr=121212#random.randint(0,100000)
+random.seed(run_nr) 
+np.random.seed(run_nr)
 print("Run number:",run_nr)
 
 
@@ -89,7 +93,7 @@ def filter_graphs(input):
     a = dict(filter(lambda x: x[1] is not None, input.items()))
     return { name: to_largest_subgraph(g) for name, g in a.items()}
 
-import numpy as np
+
 
 def get_graph_data(graph):
     #print(graph)
@@ -105,7 +109,7 @@ def get_graph_data(graph):
         'diameter': max(e),
         'transitivity': nx.transitivity(graph),
         'average_clustering': nx.average_clustering(graph),
-        'average_shortest_path_length': nx.average_shortest_path_length(graph), ##slow
+        #'average_shortest_path_length': nx.average_shortest_path_length(graph), ##slow
     }
 
 def get_graph_data_dynamic(CG, infected_list):
@@ -145,7 +149,7 @@ baselines={
     'closeness': baseline_closenessCentrality,
     'PageRank': baseline_Pagerank,
     'PersPageRank': baseline_PersPagerank,
-    'Simba': baseline_Simba,
+    #'Simba': baseline_Simba,
     'None': baseline_none,
 }
 
@@ -160,7 +164,7 @@ graphs=filter_graphs({
     **{f'barabasi_{node_num}': barabasi(node_num) for node_num in [25,50,100,250,500,1000]},
 })
 
-infection_rates = [1,1.5,2,2.5]
+infection_rates = [1.5]
 
 init_infecteds_fraction=[0.025,0.05,0.075,0.1,0.15,0.25]
 budgets_fraction=[0.05,0.075,0.1,0.15,0.25]
@@ -226,6 +230,8 @@ if __name__=='__main__':
                                 continue
                             
                             budget=int(len(graph)*budget_fraction)
+                            st0 = np.random.get_state()
+                            st1 = random.getstate()
 
                             start_time = time.time()
                             vaccinated = baseline_func(CG=graph.copy(), init_infected=init_infected, budget=budget, infection_rate=infection_rate, max_steps=SIMBA_OPTSTEPS, outpath=Simba_outpath)
@@ -233,10 +239,14 @@ if __name__=='__main__':
 
                             score, stddev = call_rust(graph.copy(), init_infected, path=outpath, init_recovered=vaccinated, infection_rate=infection_rate, num_run=SIMULATION_RUNS)
                             
+                            np.random.set_state(st0)
+                            random.setstate(st1)
+
                             result_data = {'score_mean':score, 'score_stddev':stddev, 'duration':duration}
+                            #print(f"Runner {runner_id}: {(infection_rate,graph_name,baseline_name,init_infected,budget_fraction)}")
 
                             results[(infection_rate,graph_name,baseline_name,iif,budget_fraction)] = (graph_data,result_data)
-
+                            
                             true_executes += 1
                             if ((true_executes % 100) == 0):
                                 print("Writing temporary results...")
