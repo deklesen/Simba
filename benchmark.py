@@ -97,7 +97,8 @@ def filter_graphs(input):
 
 def get_graph_data(graph):
     #print(graph)
-    e = list(nx.eccentricity(graph).values())
+    ecc = nx.eccentricity(graph)
+    e = list(ecc.values())
     degrees = np.array(list(map(lambda x: x[1], graph.degree())))
     return {
         'num_nodes': graph.number_of_nodes(),
@@ -109,10 +110,10 @@ def get_graph_data(graph):
         'diameter': max(e),
         'transitivity': nx.transitivity(graph),
         'average_clustering': nx.average_clustering(graph),
-        #'average_shortest_path_length': nx.average_shortest_path_length(graph), ##slow
-    }
+        'average_shortest_path_length': nx.average_shortest_path_length(graph), ##slow
+    }, ecc
 
-def get_graph_data_dynamic(CG, infected_list):
+def get_graph_data_dynamic(CG, infected_list, ecc):
     if len(infected_list) == 0:
         return {
             'dyn_PersPR': -1,
@@ -128,7 +129,7 @@ def get_graph_data_dynamic(CG, infected_list):
     pers_pagerank_scores = nx.pagerank(CG, personalization=pagerank_personalization_dict)
     pr_scores_infecteds = [v for k,v in pers_pagerank_scores.items() if k in infected_list]
 
-    eccentricities_infecteds = [nx.eccentricity(CG, n) for n in infected_list]
+    eccentricities_infecteds = [ecc[n] for n in infected_list]
 
     result= {
         'dyn_PersPR': np.mean(pr_scores_infecteds),
@@ -154,12 +155,12 @@ baselines={
 }
 
 graphs=filter_graphs({
-    **{f'geom_graph_{node_num}': geom_graph(node_num) for node_num in [150,300,500,1000,2000,2250]},
+    **{f'geom_graph_{node_num}': geom_graph(node_num) for node_num in [150,300,500,1000,1500]},
     **{f'grid_2d{node_num}': grid_2d(node_num) for node_num in [10,20,30,50,100,250]},
     **{f'newman{node_num}': newman(node_num) for node_num in [20,50,100,250,500]},
     **{f'complete{node_num}': complete(node_num) for node_num in [20,50,100,250]},
     **{f'regular{node_num}': regular(node_num) for node_num in [20,50,100,250,500]},
-    **{f'householdsuper_{node_num}':householdsuper_graph(node_num) for node_num in [150,300,500,1000,2000,2500]},
+    **{f'householdsuper_{node_num}':householdsuper_graph(node_num) for node_num in [150,300,500,1000.1500]},
     **{f'erdos_renyi_{node_num}': erdos_renyi(node_num) for node_num in [150,300,500,1000,1500]},
     **{f'barabasi_{node_num}': barabasi(node_num) for node_num in [25,50,100,250,500,1000]},
 })
@@ -204,24 +205,22 @@ if __name__=='__main__':
         for infection_rate in infection_rates:
             for graph_name, graph in graphs.items():
                 if graph_name in graph_data_dict:
-                    graph_data = graph_data_dict[graph_name]
+                    graph_data, ecc = graph_data_dict[graph_name]
                 else:
-                    graph_data = {
-                        **get_graph_data(graph.copy()),
-                        'name': graph_name,
-                    }
-                    graph_data_dict[graph_name] = graph_data
-                #pbar.update(1)
-                ##continue
+                    graph_data,ecc = get_graph_data(graph.copy())
+                    graph_data['name'] = graph_name
+
+                    graph_data_dict[graph_name] = (graph_data,ecc)
+
                 for iif in init_infecteds_fraction:
                     num_init_infected = math.ceil(len(graph)*iif)
                     init_infected = random.sample(list(range(len(graph))), num_init_infected)
 
                     graph_data = {
                         **graph_data,
-                        **get_graph_data_dynamic(graph.copy(), init_infected)
+                        **get_graph_data_dynamic(graph.copy(), init_infected, ecc)
                     }
-
+                    
                     for baseline_name, baseline_func in baselines.items():
                         for budget_fraction in budgets_fraction:   
                             run_counter+=1
