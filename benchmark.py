@@ -248,7 +248,7 @@ if __name__=='__main__':
                             results[(infection_rate,graph_name,baseline_name,iif,budget_fraction)] = (graph_data,result_data)
                             
                             true_executes += 1
-                            if ((true_executes % 100) == 0):
+                            if ((true_executes % 50) == 0):
                                 print("Writing temporary results...")
                                 with open("output/benchmark/{run_nr}/results_{runner_id}.pickle".format(run_nr=run_nr,runner_id=runner_id), 'wb') as handle:
                                     pickle.dump(results, handle, protocol=pickle.HIGHEST_PROTOCOL)
