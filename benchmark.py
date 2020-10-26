@@ -8,7 +8,7 @@ import os, time
 import numpy as np
 
 
-run_nr=141414#random.randint(0,100000)
+run_nr=898989#random.randint(0,100000)
 random.seed(run_nr) 
 np.random.seed(run_nr)
 print("Run number:",run_nr)
@@ -156,13 +156,13 @@ baselines={
 
 graphs=filter_graphs({
     **{f'geom_graph_{node_num}': geom_graph(node_num) for node_num in [150,300,500,1000]},
-    **{f'grid_2d{node_num}': grid_2d(node_num) for node_num in [10,20,30,50,100,250]},
     **{f'newman{node_num}': newman(node_num) for node_num in [20,50,100,250,500]},
-    **{f'complete{node_num}': complete(node_num) for node_num in [20,50,100,250]},
     **{f'regular{node_num}': regular(node_num) for node_num in [20,50,100,250,500]},
     **{f'householdsuper_{node_num}':householdsuper_graph(node_num) for node_num in [150,300,500,1000]},
     **{f'erdos_renyi_{node_num}': erdos_renyi(node_num) for node_num in [150,300,500,1000]},
     **{f'barabasi_{node_num}': barabasi(node_num) for node_num in [25,50,100,250,500,1000]},
+    **{f'grid_2d{node_num}': grid_2d(node_num) for node_num in [10,20,30,50]},
+    **{f'complete{node_num}': complete(node_num) for node_num in [20,50,100]},
 })
 
 infection_rates = [1,1.5,2]
@@ -214,6 +214,7 @@ if __name__=='__main__':
     with tqdm.tqdm(total=num_experiments) as pbar:
         for infection_rate in infection_rates:
             for graph_name, graph in graphs.items():
+                #print("GRAPH_NAME:",graph_name)
                 if graph_name in graph_data_dict:
                     graph_data, ecc = graph_data_dict[graph_name]
                 else:
