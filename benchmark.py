@@ -155,13 +155,13 @@ baselines={
 }
 
 graphs=filter_graphs({
-    **{f'geom_graph_{node_num}': geom_graph(node_num) for node_num in [150,300,500,1000,1500]},
+    **{f'geom_graph_{node_num}': geom_graph(node_num) for node_num in [150,300,500,1000]},
     **{f'grid_2d{node_num}': grid_2d(node_num) for node_num in [10,20,30,50,100,250]},
     **{f'newman{node_num}': newman(node_num) for node_num in [20,50,100,250,500]},
     **{f'complete{node_num}': complete(node_num) for node_num in [20,50,100,250]},
     **{f'regular{node_num}': regular(node_num) for node_num in [20,50,100,250,500]},
-    **{f'householdsuper_{node_num}':householdsuper_graph(node_num) for node_num in [150,300,500,1000.1500]},
-    **{f'erdos_renyi_{node_num}': erdos_renyi(node_num) for node_num in [150,300,500,1000,1500]},
+    **{f'householdsuper_{node_num}':householdsuper_graph(node_num) for node_num in [150,300,500,1000]},
+    **{f'erdos_renyi_{node_num}': erdos_renyi(node_num) for node_num in [150,300,500,1000]},
     **{f'barabasi_{node_num}': barabasi(node_num) for node_num in [25,50,100,250,500,1000]},
 })
 
@@ -201,6 +201,16 @@ if __name__=='__main__':
         Path(Simba_path).mkdir(parents=True)
 
     results = {}
+    for no in range(total_runners):
+        path = "output/benchmark/{run_nr}/results_{no}.pickle".format(run_nr=run_nr,no=no)
+        try:
+            with open(path, 'rb') as handle:
+                results = {**results,**pickle.load(handle)}
+        except:
+            print("Error!")
+            pass
+    print("Loaded",len(results), "results from disk.")
+
     with tqdm.tqdm(total=num_experiments) as pbar:
         for infection_rate in infection_rates:
             for graph_name, graph in graphs.items():
@@ -228,6 +238,9 @@ if __name__=='__main__':
                             if not (run_counter % total_runners == runner_id):
                                 continue
                             
+                            if (infection_rate,graph_name,baseline_name,iif,budget_fraction) in results:
+                                continue
+
                             budget=int(len(graph)*budget_fraction)
                             st0 = np.random.get_state()
                             st1 = random.getstate()
