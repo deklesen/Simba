@@ -150,7 +150,7 @@ baselines={
     'closeness': baseline_closenessCentrality,
     'PageRank': baseline_Pagerank,
     'PersPageRank': baseline_PersPagerank,
-    #'Simba': baseline_Simba,
+    'Simba': baseline_Simba,
     'None': baseline_none,
 }
 
@@ -170,7 +170,7 @@ infection_rates = [1,1.5,2]
 init_infecteds_fraction=[0.025,0.05,0.075,0.1,0.15,0.25]
 budgets_fraction=[0.05,0.075,0.1,0.15,0.25]
 SIMULATION_RUNS = 1000
-SIMBA_OPTSTEPS=5
+SIMBA_OPTSTEPS=1
 
 import pickle
 import tqdm
