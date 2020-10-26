@@ -8,7 +8,7 @@ import os, time
 import numpy as np
 
 
-run_nr=121212#random.randint(0,100000)
+run_nr=141414#random.randint(0,100000)
 random.seed(run_nr) 
 np.random.seed(run_nr)
 print("Run number:",run_nr)
