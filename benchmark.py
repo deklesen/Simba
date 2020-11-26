@@ -8,7 +8,7 @@ import os, time
 import numpy as np
 
 
-run_nr=898989#random.randint(0,100000)
+run_nr=789789#random.randint(0,100000)
 random.seed(run_nr) 
 np.random.seed(run_nr)
 print("Run number:",run_nr)
@@ -143,24 +143,25 @@ from functools import partial
 baselines={
     'random': baseline_random,
     #'dava': baseline_dava,
-    'davaFast': baseline_davaf,
-    'degree': baseline_degree,
-    'betweenness': baseline_betweenness,
-    'EVcentrality': baseline_EVcentrality,
-    'closeness': baseline_closenessCentrality,
-    'PageRank': baseline_Pagerank,
-    'PersPageRank': baseline_PersPagerank,
+    #'davaFast': baseline_davaf,
+    #'degree': baseline_degree,
+    #'betweenness': baseline_betweenness,
+    #'EVcentrality': baseline_EVcentrality,
+    #'closeness': baseline_closenessCentrality,
+    #'PageRank': baseline_Pagerank,
+    #'PersPageRank': baseline_PersPagerank,
     'Simba': baseline_Simba,
+    'SimbaSimple': baseline_SimbaSimple,
     'None': baseline_none,
 }
 
 graphs=filter_graphs({
-    **{f'geom_graph_{node_num}': geom_graph(node_num) for node_num in [150,300,500,1000]},
+    **{f'geom_graph_{node_num}': geom_graph(node_num) for node_num in [150,300,500]},
     **{f'newman{node_num}': newman(node_num) for node_num in [20,50,100,250,500]},
     **{f'regular{node_num}': regular(node_num) for node_num in [20,50,100,250,500]},
-    **{f'householdsuper_{node_num}':householdsuper_graph(node_num) for node_num in [150,300,500,1000]},
-    **{f'erdos_renyi_{node_num}': erdos_renyi(node_num) for node_num in [150,300,500,1000]},
-    **{f'barabasi_{node_num}': barabasi(node_num) for node_num in [25,50,100,250,500,1000]},
+    **{f'householdsuper_{node_num}':householdsuper_graph(node_num) for node_num in [150,300,500]},
+    **{f'erdos_renyi_{node_num}': erdos_renyi(node_num) for node_num in [150,300,500]},
+    **{f'barabasi_{node_num}': barabasi(node_num) for node_num in [25,50,100,250,500]},
     **{f'grid_2d{node_num}': grid_2d(node_num) for node_num in [10,20,30,50]},
     **{f'complete{node_num}': complete(node_num) for node_num in [20,50,100]},
 })

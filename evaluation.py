@@ -291,7 +291,7 @@ def call_rust(CG, init_infected, path, type, init_recovered = None, num_run=1000
 
 
 
-def vacc_strategy_greedy(CG, init_infected, outpath, budget=2, max_steps=100, infection_rate=2.0):
+def vacc_strategy_greedy(CG, init_infected, outpath, budget=2, max_steps=100, infection_rate=2.0, Simple=False):
 
     ################################################################################
     # Setup
@@ -346,8 +346,16 @@ def vacc_strategy_greedy(CG, init_infected, outpath, budget=2, max_steps=100, in
         CG, TG, traj_data, score, eq_dist = call_rust(CG, init_infected, path=outpath, init_recovered=vaccinated,
                                                                          type=step_i_str, infection_rate=infection_rate)
 
+       #
         node_candidates = [n for n in range(len(eq_dist) - 1) if
                            n not in init_infected and n not in vaccinated and n != removed]  # -1 important to not vacc dummy
+
+        if Simple==True:
+            rank = sorted([(i, TG.nodes[i]["intensity"]) for i in node_candidates], key=lambda x: -x[1])
+            if (len(rank)<=budget):
+                return list(map(lambda x:x[0], rank))
+            return list(map(lambda x:x[0], rank[:budget]))
+
         rank = sorted([(i, eq_dist[i]) for i in node_candidates], key=lambda x: -x[1])
         #rank = [x[0] for x in rank]
         #candidate = rank[0]
@@ -411,7 +419,7 @@ def analysis(CG, name, infection_rate=2.0, budget=1, max_steps=OPTIMSTEPS, init_
         os.system('mkdir output/' + name)
         CG = nx.convert_node_labels_to_integers(CG)
         outpath = 'output/'+name+'/{type}.{fileformat}'
-        vacc_strategy_greedy(CG, init_infected, outpath, max_steps=max_steps, infection_rate=infection_rate, budget=budget)
+        vacc_strategy_greedy(CG, init_infected, outpath, max_steps=max_steps, infection_rate=infection_rate, budget=budget, Simple=True)
     except Exception as err:
         traceback.print_tb(err.__traceback__)
         logging.info(str(err.__traceback__))

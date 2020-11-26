@@ -7,13 +7,26 @@ def baseline_Simba(CG, init_infected, budget, outpath, infection_rate, max_steps
     import traceback
     try:
         
-        return vacc_strategy_greedy(CG, init_infected, outpath, max_steps=max_steps, infection_rate=infection_rate, budget=budget)
+        return vacc_strategy_greedy(CG, init_infected, outpath, max_steps=max_steps, infection_rate=infection_rate, budget=budget, Simple=False)
     except Exception as err:
         traceback.print_tb(err.__traceback__)
         logging.info(str(err.__traceback__))
         logging.info(''.join(traceback.format_stack()))
         exit()
        # time.sleep(5)
+
+def baseline_SimbaSimple(CG, init_infected, budget, outpath, infection_rate, max_steps, **kwargs):
+    import traceback
+    try:
+        
+        return vacc_strategy_greedy(CG, init_infected, outpath, max_steps=max_steps, infection_rate=infection_rate, budget=budget, Simple=True)
+    except Exception as err:
+        traceback.print_tb(err.__traceback__)
+        logging.info(str(err.__traceback__))
+        logging.info(''.join(traceback.format_stack()))
+        exit()
+       # time.sleep(5)
+
 
 
 def baseline_none(*args,**kwargs):
